@@ -24,6 +24,11 @@ m.out<-model.sel(m0,m1,m2,m3,m4)
 options(na.action="na.fail")
 globm<-lm(Sepal.Width ~ Sepal.Length + Petal.Length + Petal.Width + Species + Insects, data=iris)
 dd.globm<-dredge(globm, rank="AICc", m.lim=c(0,3), subset=!(Petal.Length & Sepal.Length) & !(Petal.Width & Sepal.Length) & !(Petal.Width & Petal.Length))
+#generate logical correlation matrix to put into subset
+smat<-abs(cor(iris[,c(1, 3:4, 6)])) <=0.5#exclude pairs of var with corr coeff>0.50
+smat[!lower.tri(smat)]<-NA
+dd.smat.globm<-dredge(globm, rank="AICc", m.lim=c(0,3), subset=smat)#exactly the same as dd.globm
+
 summary(get.models(dd.globm, 1)[[1]])
 importance(dd.globm)
 
@@ -56,3 +61,5 @@ chickglobm<-lme(weight ~ Diet + poly(Time,2) + cloud, random= ~ Time|Chick, data
 dd.chick<-dredge(chickglobm, rank="AICc", m.lim=c(0,4))
 summary(get.models(dd.chick, 1)[[1]])#note that final model parameters should be done with REML
 #Note: for list of supported models, pg 38-39 from pdf on CRAN and in Github
+#MuMIn also has model averaging, to be used if there is no clear "best" model, 
+#however, note that model averaging should not be used with mixed effects models
